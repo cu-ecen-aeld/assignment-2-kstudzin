@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "systemcalls.h"
 
@@ -48,10 +49,15 @@ bool do_exec(int count, ...)
     va_list args;
     va_start(args, count);
     char * command[count+1];
+    char * command_in[count];
     int i;
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
+	if (i > 0) {
+	    command_in[i - 1] = command[i];
+	}
+	printf("%s", command[i]);
     }
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
@@ -67,12 +73,18 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+
     int child_pid = fork();
+    if (child_pid == -1) {
+    	perror("Creating fork");
+	return false;
+    }
+    
     if (child_pid == 0) {
         // Child process
-	int result = execv(command[0], &command[1]);
+	int result = execv(command[0], command_in);
 	if (result == -1) {
-            perror("Child: ");
+            perror("Executing command");
             return false;
         } 
     } else {
@@ -99,10 +111,14 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     va_list args;
     va_start(args, count);
     char * command[count+1];
+    char * cmd_in[count];
     int i;
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
+	if (i > 0) {
+	    cmd_in[i - 1] = command[i];
+	}
     }
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
@@ -127,10 +143,34 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
         perror("dup2"); 
         return false; 
     }
-    bool result = do_exec(count, args);
+    //bool result = do_exec(count, args);
+
+    int child_pid = fork();
+    if (child_pid == -1) {
+        perror("Creating fork");
+        return false;
+    }
+
+    if (child_pid == 0) {
+        // Child process
+        int result = execv(command[0], cmd_in);
+        if (result == -1) {
+            perror("Executing command");
+            return false;
+        }
+    } else {
+        // Parent process
+        int status = 0;
+        pid_t wait_result = waitpid(child_pid, &status, 0);
+        if (wait_result != child_pid) {
+            perror("Parent: ");
+            return false;
+        }
+    }
+
 
     close (fd);
     va_end(args);
 
-    return result;
+    return true;
 }
