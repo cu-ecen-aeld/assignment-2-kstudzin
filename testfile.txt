@@ -1,0 +1,15 @@
+Could not read from conf/username.txt
+execv /bin/sh -c echo home is $HOME returned 
+/media/sf_host-users-kate/devel/mooc/linux-systems-programming/assignment-1-kstudzin/assignment-autotest/test/assignment3/Test_systemcalls.c:82:test_exec_redirect_calls:FAIL: Expected -104 Was 0. The first 9 chars echoed should be "home is /".  The last chars will include the content of the $HOME variable
+
+-----------------------
+3 Tests 2 Failures 0 Ignored 
+FAIL
+Remove trailing newline
+Read Could not read from conf/username.txt from testfile.txt
+execv /bin/sh -c echo home is $HOME returned Could not read from conf/username.txt
+/media/sf_host-users-kate/devel/mooc/linux-systems-programming/assignment-1-kstudzin/assignment-autotest/test/assignment3/Test_systemcalls.c:82:test_exec_redirect_calls:FAIL: Expected -37 Was 0. The first 9 chars echoed should be "home is /".  The last chars will include the content of the $HOME variable
+
+-----------------------
+3 Tests 2 Failures 0 Ignored 
+FAIL
