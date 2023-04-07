@@ -50,14 +50,10 @@ bool do_exec(int count, ...)
     va_list args;
     va_start(args, count);
     char * command[count+1];
-    char * command_in[count];
     int i;
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
-	if (i > 0) {
-	    command_in[i - 1] = command[i];
-	}
 	printf("%s", command[i]);
     }
     command[count] = NULL;
@@ -83,7 +79,7 @@ bool do_exec(int count, ...)
     
     if (child_pid == 0) {
         // Child process
-	int result = execv(command[0], command_in);
+	int result = execv(command[0], command);
 	if (result == -1) {
             perror("Executing command");
             return false;
