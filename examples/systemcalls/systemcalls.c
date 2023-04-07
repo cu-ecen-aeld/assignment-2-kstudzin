@@ -3,6 +3,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "systemcalls.h"
 
@@ -108,23 +109,28 @@ bool do_exec(int count, ...)
 */
 bool do_exec_redirect(const char *outputfile, int count, ...)
 {
+    openlog(NULL, 0, LOG_USER);
+
     va_list args;
     va_start(args, count);
     char * command[count+1];
     char * cmd_in[count];
     int i;
+
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
 	if (i > 0) {
 	    cmd_in[i - 1] = command[i];
+            syslog(LOG_ERR, "arg %i %s", i - 1, cmd_in[i - 1]);
+	} else {
+            syslog(LOG_ERR, "cmd %s", command[i]);
 	}
     }
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
     command[count] = command[count];
-
 
 /*
  * TODO
@@ -135,7 +141,8 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 */
     int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0755);
     if (fd < 0) {
-        perror("opening file: ");
+	syslog(LOG_ERR, "Opening file %s", outputfile);
+        perror("Opening file");
 	return false;
     }
 
@@ -153,7 +160,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 
     if (child_pid == 0) {
         // Child process
-        int result = execv(command[0], cmd_in);
+        int result = execv(command[0], command);
         if (result == -1) {
             perror("Executing command");
             return false;
@@ -172,5 +179,6 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     close (fd);
     va_end(args);
 
+    closelog();
     return true;
 }
